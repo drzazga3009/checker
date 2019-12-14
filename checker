@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Usage:
 #     ./checker <url> [<delay (in seconds, default: 60)>] [<action to be done at url when change is detected (default: chromium)>]
@@ -19,13 +19,16 @@ declare -r url=${1}
 declare -r delay=${2:-60}
 declare -r action=${3:-chromium}
 
-prev=`curl -s -H 'Cache-Control: no-cache' ${url} | md5sum | awk '{printf $1}'`
+prevHTML=`curl -s -H 'Cache-Control: no-cache' ${url}`
+prevHash=`echo ${prevHTML} | md5sum | awk '{printf $1}'`
 
 while true
 do
-	hash=`curl -s -H 'Cache-Control: no-cache' ${url} | md5sum | awk '{printf $1}'`
-	if [ "${prev}" != "${hash}" ]
+	currHTML=`curl -s -H 'Cache-Control: no-cache' ${url}`
+	currHash=`echo ${currHTML} | md5sum | awk '{printf $1}'`
+	if [ "${prevHash}" != "${currHash}" ]
 	then
+		diff <(echo "${prevHTML}") <(echo "${currHTML}")
 		eval ${action} ${url}
 		exit 0
 	fi
